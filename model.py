@@ -1,46 +1,39 @@
-import numpy as np
+
 import pandas as pd
-import tensorflow as tf
-from tensorflow.keras.models import Sequential
-from tensorflow.keras.layers import LSTM, Dense
+from statsmodels.tsa.seasonal import seasonal_decompose
+import matplotlib.pyplot as plt
 
-file_path = 'ride_requests.csv'
 
-# Read the data into a pandas DataFrame
-df = pd.read_csv('./data/dates.csv')
+df = pd.read_csv('./data/processed_rides_data.csv', parse_dates=['Date Paid'], index_col='Date Paid')
 
-# Convert the 'Date Paid' column to a datetime format
-df['Date Paid'] = pd.to_datetime(df['Date Paid'], format='%m/%d/%Y')
+# Ensure that the Date Paid column is in datetime format and set it as the index
+df.index = pd.to_datetime(df.index)
 
-# Group by date and count the number of rides for each date
-rides_per_date = df.groupby('Date Paid').size().reset_index(name='Number of Rides')
+# Perform time series decomposition
+result = seasonal_decompose(df['Number of Rides'], model='additive')
 
-# Display the resulting DataFrame
-print(rides_per_date)
+# Plot the original time series, trend, seasonality, and residuals
+plt.figure(figsize=(12, 8))
 
-df = pd.read_csv("your_dataset.csv")
-# Assuming 'Date' is your date column and 'RideRequests' is the target variable
-time_series_data = df[['Date', 'RideRequests']]
+plt.subplot(4, 1, 1)
+plt.plot(df['Number of Rides'], label='Original')
+plt.legend(loc='upper left')
+plt.title('Original Time Series')
 
-# Convert 'Date' to datetime and set it as the index
-time_series_data['Date'] = pd.to_datetime(time_series_data['Date'])
-time_series_data.set_index('Date', inplace=True)
+plt.subplot(4, 1, 2)
+plt.plot(result.trend, label='Trend')
+plt.legend(loc='upper left')
+plt.title('Trend Component')
 
-# Resample the data to a specific frequency (e.g., daily) and fill missing values
-time_series_data = time_series_data.resample('D').sum().fillna(0)
+plt.subplot(4, 1, 3)
+plt.plot(result.seasonal, label='Seasonal')
+plt.legend(loc='upper left')
+plt.title('Seasonal Component')
 
-# Normalize the data if needed
-time_series_data /= time_series_data.max()
+plt.subplot(4, 1, 4)
+plt.plot(result.resid, label='Residuals')
+plt.legend(loc='upper left')
+plt.title('Residuals')
 
-model = Sequential()
-model.add(LSTM(units=50, activation='relu', input_shape=(n_steps, n_features)))
-model.add(Dense(units=1))
-model.compile(optimizer='adam', loss='mean_squared_error')
-
-X, y = prepare_sequences(time_series_data.values, n_steps)  # Implement prepare_sequences function
-model.fit(X, y, epochs=50, batch_size=32)
-
-future_dates = pd.date_range(start='2022-01-02', periods=10, freq='D')
-future_data = np.zeros((len(future_dates), 1))  # Adjust shape based on your features
-future_data = future_data.reshape((1, n_steps, n_features))
-predictions = model.predict(future_data)
+plt.tight_layout()
+plt.show()
