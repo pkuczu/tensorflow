@@ -4,6 +4,20 @@ import tensorflow as tf
 from tensorflow.keras.models import Sequential
 from tensorflow.keras.layers import LSTM, Dense
 
+file_path = 'ride_requests.csv'
+
+# Read the data into a pandas DataFrame
+df = pd.read_csv('./data/dates.csv')
+
+# Convert the 'Date Paid' column to a datetime format
+df['Date Paid'] = pd.to_datetime(df['Date Paid'], format='%m/%d/%Y')
+
+# Group by date and count the number of rides for each date
+rides_per_date = df.groupby('Date Paid').size().reset_index(name='Number of Rides')
+
+# Display the resulting DataFrame
+print(rides_per_date)
+
 df = pd.read_csv("your_dataset.csv")
 # Assuming 'Date' is your date column and 'RideRequests' is the target variable
 time_series_data = df[['Date', 'RideRequests']]
